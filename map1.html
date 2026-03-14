@@ -117,75 +117,11 @@
         });
         const grades = [4, 5, 6],            
             radii = [5, 15, 20];
-        //load data to the map as new layers.
-        //map.on('load', function loadingData() {
         
         async function geojsonFetch() { 
-            let response = await fetch('assets/us-covid-2020-rates (3).json');
+            let response = await fetch('assets/us-covid-2020-rates.json');
             let covidRates = await response.json();
-            map.on('load', () => { //simplifying the function statement: arrow with brackets to define a function
-                // when loading a geojson, there are two steps
-                // add a source of the data and then add the layer out of the source
-            // Change cursor to pointer when hovering counties
-            map.on('mouseenter', 'covidRates-layer', () => {
-                map.getCanvas().style.cursor = 'pointer';
-            });
-            map.on('mouseleave', 'covidRates-layer', () => {
-                map.getCanvas().style.cursor = '';
-            }); 
-            map.on('click', 'covidRates-layer', (event) => {
-                // Get the first feature under the click
-                const feature = event.features[0];
-
-                // Get properties you want to show
-                const countyName = feature.properties.county; // adjust if your property is named differently
-                const stateName = feature.properties.state;
-                const rates = feature.properties.rates;
-
-                // Create a popup
-                new mapboxgl.Popup()
-                    .setLngLat(event.lngLat) // the click location
-                    .setHTML(`
-                        <strong>${countyName}, ${stateName}</strong><br>
-                        COVID-19 Rate: ${rates} per 1,000 people
-                    `)
-                    .addTo(map);
-            });   
-
-                map.addSource('covidRates', {
-                    type: 'geojson',
-                    data: covidRates
-                });
-
-                map.addLayer({
-                    'id': 'covidRates-layer',
-                    'type': 'fill',
-                    'source': 'covidRates',
-                    'paint': {
-                        'fill-color': [
-                            'step',
-                            ['get', 'rates'],
-                            '#FFEDA0',   // stop_output_0
-                            10,          // stop_input_0
-                            '#FED976',   // stop_output_1
-                            20,          // stop_input_1
-                            '#FEB24C',   // stop_output_2
-                            50,          // stop_input_2
-                            '#FD8D3C',   // stop_output_3
-                            100,         // stop_input_3
-                            '#FC4E2A',   // stop_output_4
-                            200,         // stop_input_4
-                            '#E31A1C',   // stop_output_5
-                            500,         // stop_input_5
-                            '#BD0026',   // stop_output_6
-                            1000,        // stop_input_6
-                            "#800026"    // stop_output_7
-                        ],
-                        'fill-outline-color': '#BBBBBB',
-                        'fill-opacity': 0.7,
-                    }
-                });
-                map.addSource('covidRates', {
+            map.addSource('covidRates', {
                     type: 'geojson',
                     data: covidRates
                 });
@@ -211,6 +147,32 @@
                         'fill-opacity': 0.7,
                     }
                 });
+            map.on('load', () => { 
+            map.on('mouseenter', 'covidRates-layer', () => {
+                map.getCanvas().style.cursor = 'pointer';
+            });
+            map.on('mouseleave', 'covidRates-layer', () => {
+                map.getCanvas().style.cursor = '';
+            }); 
+            map.on('click', 'covidRates-layer', (event) => {
+                // Get the first feature under the click
+                const feature = event.features[0];
+
+                // Get properties you want to show
+                const countyName = feature.properties.county; // adjust if your property is named differently
+                const stateName = feature.properties.state;
+                const rates = feature.properties.rates;
+
+                // Create a popup
+                new mapboxgl.Popup()
+                    .setLngLat(event.lngLat) // the click location
+                    .setHTML(`
+                        <strong>${countyName}, ${stateName}</strong><br>
+                        COVID-19 Rate: ${rates} per 1,000 people
+                    `)
+                    .addTo(map);
+            });   
+                
             });
         }
         
@@ -246,7 +208,6 @@
             legend.appendChild(item);
         });
 
-// Add source
 const source = document.createElement('p');
 source.style.textAlign = 'right';
 source.style.fontSize = '10pt';
