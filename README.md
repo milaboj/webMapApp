@@ -1,11 +1,9 @@
-* Covid-19 Cases in the United States
+# Covid-19 Prevalence in the United States by County in 2020
 
-write up a project description in the readme.md file. This file will introduce the project name, a brief introduction, links to the map, screenshots, the primary functions(especially the function which was not covered in the lectures), libraries in use, data sources, credit, acknowledgment, and other necessary information. (6 points)
+### Introduction
+This project looks at how different counties and states were impacted by Covid-19 in 2020 by looking both at Covid-19 rates per 1,000 residents and total cases. The [first map](https://milaboj.github.io/webMapApp/map1.html) is a choropleth map which shows Covid-19 rates per 1,000 residents per county seen ![here](/img/screenshot1.png). The [second map](https://milaboj.github.io/webMapApp/map2.html) is a proportional symbol map which shows total Covid-19 cases per county seen ![here](/img/screenshot2.png).
 
-- title
-- intro
-- links to maps
-- screenshots
+
 - primary functions
 - data sources
 - libraries used
