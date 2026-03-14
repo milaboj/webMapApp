@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8">
-    <title>COVID-19 Cases in The United States</title>
+    <title>Proportional Symbols Map of COVID-19 Cases</title>
     <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet">
     <link href="https://api.mapbox.com/mapbox-gl-js/v2.8.1/mapbox-gl.css" rel="stylesheet">
@@ -21,137 +21,163 @@
             width: 100%;
         }
 
-        /* the layout of the legend panel */
         #legend {
             position: absolute;
-            bottom: 0;
-            right: 0;
-            width: 110px;
+            bottom: 10px;
+            right: 10px;
+            width: 140px;
             background: #fff;
-            margin-right: 20px;
-            margin-bottom: 40px;
-            padding: 10px 20px 10px 10px;
-            border-radius: 3px;
-            text-align: center;
+            padding: 10px;
+            border-radius: 5px;
             font-family: 'Open Sans', sans-serif;
+            font-size: 12px;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.3);
         }
 
-        /* each line for a break */
-        .break {
-            position: relative;
-            margin: 0px;
-            padding: 0px;
-        }
-
-        /* basic style for a dot/circle */
-        .dot {
+        .legend-circle {
             display: inline-block;
-            margin-top: 5px;
             border-radius: 50%;
-            opacity: 0.6;
+            margin-right: 5px;
+            vertical-align: middle;
         }
 
-        /* the label for the dot */
-        .dot-label {
+        #map-info {
             position: absolute;
-            top: 0;
-            right: 0;
-            font-style: italic;
+            top: 10px;
+            left: 10px;
+            max-width: 300px;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-family: 'Open Sans', sans-serif;
+            font-size: 14px;
+            line-height: 1.4;
+            z-index: 1;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.3);
         }
 
-        /* the text color of a hyper link */
-        a {
-            color: black
+        #map-info h1 {
+            font-size: 16px;
+            margin: 0 0 5px 0;
+        }
+
+        #map-info p {
+            margin: 5px 0;
+        }
+
+        #map-info a {
+            color: #0074D9;
+            text-decoration: none;
+        }
+
+        #map-info a:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
 
 <body>
+    <div id="map-info">
+        <h1>COVID-19 Cases in the US, 2020</h1>
+        <p>Circle size represents COVID-19 case cases for US counties during 2020.</p>
+        <p><strong>Users:</strong> Public health analysts, students, and researchers.</p>
+        <p><strong>Data Source:</strong> 
+            <a href="https://github.com/nytimes/covid-19-data">NY Times COVID-19 Data</a>
+        </p>
+    </div>
     <div id="map"></div>
     <div id="legend"></div>
+
     <script>
-        mapboxgl.accessToken =
-            'pk.eyJ1IjoibWlsYWJvIiwiYSI6ImNsbnFjbG9xZTB0MmIya3B0eDFwNDEwY3gifQ.9SzpYF3dZCwahgWShbsRiQ';
-        let map = new mapboxgl.Map({
-            container: 'map', // container ID
-            style: 'mapbox://styles/mapbox/dark-v10',
-            zoom: 4, // starting zoom
-            minZoom: 2, // minimum zoom level of the map
-            center: [-94, 39] // starting center
+        mapboxgl.accessToken = 'pk.eyJ1IjoibWlsYWJvIiwiYSI6ImNsbnFjbG9xZTB0MmIya3B0eDFwNDEwY3gifQ.9SzpYF3dZCwahgWShbsRiQ';
+
+        const map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/light-v10',
+            center: [-94, 39],
+            zoom: 4,
+            minZoom: 2
         });
-        const grades = [4, 5, 6],
-            colors = ['rgb(208,209,230)', 'rgb(103,169,207)', 'rgb(1,108,89)'],
-            radii = [5, 15, 20];
-        //load data to the map as new layers.
-        //map.on('load', function loadingData() {
-        map.on('load', () => { //simplifying the function statement: arrow with brackets to define a function
-            // when loading a geojson, there are two steps
-            // add a source of the data and then add the layer out of the source
-            map.addSource('earthquakes', {
+
+        // Circle radii breakpoints (proportional sizes)
+        const sizeBreaks = [10, 50, 100, 500, 1000];
+        const radii = [5, 10, 15, 20, 25];
+        const colors = ['#FFEDA0','#FED976','#FEB24C','#FD8D3C','#FC4E2A','#E31A1C','#BD0026','#800026'];
+
+        map.on('load', async () => {
+            // Fetch GeoJSON data
+            const response = await fetch('assets/us-covid-2020-counts.json'); // rename file to avoid spaces
+            const data = await response.json();
+
+            // Add as a source
+            map.addSource('covidCounts', {
                 type: 'geojson',
-                data: 'assets/earthquakes.geojson'
+                data: data
             });
+
+            // Add proportional symbols layer
             map.addLayer({
-                'id': 'earthquakes-point',
-                'type': 'circle',
-                'source': 'earthquakes',
-                'minzoom': 5,
-                'paint': {
-                    // increase the radii of the circle as mag value increases
-                    'circle-radius': {
-                        'property': 'mag',
-                        'stops': [
-                            [grades[0], radii[0]],
-                            [grades[1], radii[1]],
-                            [grades[2], radii[2]]
-                        ]
-                    },
-                    // change the color of the circle as mag value increases
-                    'circle-color': {
-                        'property': 'mag',
-                        'stops': [
-                            [grades[0], colors[0]],
-                            [grades[1], colors[1]],
-                            [grades[2], colors[2]]
-                        ]
-                    },
+                id: 'covidSymbols',
+                type: 'circle',
+                source: 'covidCounts',
+                paint: {
+                    'circle-radius': [
+                        'interpolate',
+                        ['linear'],
+                        ['get', 'cases'],
+                        sizeBreaks[0], radii[0],
+                        sizeBreaks[1], radii[1],
+                        sizeBreaks[2], radii[2],
+                        sizeBreaks[3], radii[3],
+                        sizeBreaks[4], radii[4]
+                    ],
+                    'circle-color': '#FD8D3C',
+                    'circle-opacity': 0.6,
                     'circle-stroke-color': 'white',
-                    'circle-stroke-width': 1,
-                    'circle-opacity': 0.6
+                    'circle-stroke-width': 1
                 }
             });
-            // click on tree to view magnitude in a popup
-            map.on('click', 'earthquakes-point', (event) => {
+
+            // Cursor changes
+            map.on('mouseenter', 'covidSymbols', () => map.getCanvas().style.cursor = 'pointer');
+            map.on('mouseleave', 'covidSymbols', () => map.getCanvas().style.cursor = '');
+
+            // Popup on click
+            map.on('click', 'covidSymbols', (e) => {
+                const feature = e.features[0];
                 new mapboxgl.Popup()
-                    .setLngLat(event.features[0].geometry.coordinates)
-                    .setHTML(`<strong>Magnitude:</strong> ${event.features[0].properties.mag}`)
+                    .setLngLat(e.lngLat)
+                    .setHTML(`<strong>${feature.properties.county}, ${feature.properties.state}</strong><br>
+                              COVID-19 Cases: ${feature.properties.cases}`)
                     .addTo(map);
             });
-        });
-        // create legend
-        const legend = document.getElementById('legend');
-        //set up legend grades and labels
-        var labels = ['<strong>Magnitude</strong>'],
-            vbreak;
-        //iterate through grades and create a scaled circle and label for each
-        for (var i = 0; i < grades.length; i++) {
-            vbreak = grades[i];
-            // you need to manually adjust the radius of each dot on the legend 
-            // in order to make sure the legend can be properly referred to the dot on the map.
-            dot_radii = 2 * radii[i];
-            labels.push(
-                '<p class="break"><i class="dot" style="background:' + colors[i] + '; width: ' + dot_radii +
-                'px; height: ' +
-                dot_radii + 'px; "></i> <span class="dot-label" style="top: ' + dot_radii / 2 + 'px;">' + vbreak +
-                '</span></p>');
-        }
-        // add the data source
-        const source =
-            '<p style="text-align: right; font-size:10pt">Source: <a href="https://earthquake.usgs.gov/earthquakes/">USGS</a></p>';
-        // combine all the html codes.
-        legend.innerHTML = labels.join('') + source;
-    </script>
 
+            // Legend
+            const legend = document.getElementById('legend');
+            legend.innerHTML = '<strong>Covid-19 Cases</strong><br>';
+            sizeBreaks.forEach((val, i) => {
+                const item = document.createElement('div');
+                const circle = document.createElement('span');
+                circle.className = 'legend-circle';
+                circle.style.width = `${radii[i]*2}px`;
+                circle.style.height = `${radii[i]*2}px`;
+                circle.style.backgroundColor = '#FD8D3C';
+                circle.style.opacity = 0.6;
+                item.appendChild(circle);
+                const label = document.createElement('span');
+                label.innerText = ` ${val}${i<sizeBreaks.length-1 ? '–'+sizeBreaks[i+1] : '+'}`;
+                item.appendChild(label);
+                legend.appendChild(item);
+            });
+
+            // Add data source
+            const source = document.createElement('p');
+            source.style.fontSize = '10px';
+            source.style.textAlign = 'right';
+            source.innerHTML = 'Source: <a href="https://github.com/nytimes/covid-19-data">NYTimes</a>';
+            legend.appendChild(source);
+        });
+    </script>
 </body>
 
 </html>
